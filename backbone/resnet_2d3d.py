@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import math
-from functools import partial
 
 __all__ = [
     'ResNet2d3d_full', 'resnet18_2d3d_full', 'resnet34_2d3d_full', 'resnet50_2d3d_full', 'resnet101_2d3d_full',
@@ -48,41 +47,29 @@ def downsample_basic_block(x, planes, stride):
 class BasicBlock3d(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, feature_size=None, batchnorm=False, affine=True, track_running_stats=True, use_final_relu=True):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, track_running_stats=True, use_final_relu=True):
         super(BasicBlock3d, self).__init__()
-        bias = not batchnorm
+        bias = False
         self.use_final_relu = use_final_relu
         self.conv1 = conv3x3x3(inplanes, planes, stride, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn1 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            feature_size = (math.ceil(feature_size[0]/stride), math.ceil(feature_size[1]/stride), math.ceil(feature_size[2]/stride))
-            self.bn1 = nn.LayerNorm((planes, *feature_size))
+        self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
 
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3x3(planes, planes, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm':
-            self.bn2 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn2 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.downsample = downsample
         self.stride = stride
-        self.batchnorm = batchnorm 
 
     def forward(self, x):
         residual = x
 
         out = self.conv1(x)
-        if self.batchnorm: out = self.bn1(out)
+        out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        if self.batchnorm: out = self.bn2(out)
+        out = self.bn2(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -96,41 +83,29 @@ class BasicBlock3d(nn.Module):
 class BasicBlock2d(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, feature_size=None, batchnorm=False, affine=True, track_running_stats=True, use_final_relu=True):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, track_running_stats=True, use_final_relu=True):
         super(BasicBlock2d, self).__init__()
-        bias = not batchnorm
+        bias = False
         self.use_final_relu = use_final_relu
         self.conv1 = conv1x3x3(inplanes, planes, stride, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn1 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            feature_size = (feature_size[0]//1, math.ceil(feature_size[1]/stride), math.ceil(feature_size[2]/stride))
-            self.bn1 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv1x3x3(planes, planes, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm':
-            self.bn2 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn2 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.downsample = downsample
         self.stride = stride
-        self.batchnorm = batchnorm 
 
     def forward(self, x):
         residual = x
 
         out = self.conv1(x)
-        if self.batchnorm: out = self.bn1(out)
+        out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        if self.batchnorm: out = self.bn2(out)
+        out = self.bn2(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -144,53 +119,36 @@ class BasicBlock2d(nn.Module):
 class Bottleneck3d(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, feature_size=None, batchnorm=False, affine=True, track_running_stats=True, use_final_relu=True):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, track_running_stats=True, use_final_relu=True):
         super(Bottleneck3d, self).__init__()
-        bias = not batchnorm
+        bias = False
         self.use_final_relu = use_final_relu
         self.conv1 = nn.Conv3d(inplanes, planes, kernel_size=1, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn1 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn1 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.conv2 = nn.Conv3d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn2 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            feature_size = (math.ceil(feature_size[0]/stride), math.ceil(feature_size[1]/stride), math.ceil(feature_size[2]/stride))
-            self.bn2 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.conv3 = nn.Conv3d(planes, planes * 4, kernel_size=1, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn3 = nn.BatchNorm3d(planes * 4, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn3 = nn.InstanceNorm3d(planes * 4, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn3 = nn.LayerNorm((planes * 4, *feature_size))
-
+        self.bn3 = nn.BatchNorm3d(planes * 4, track_running_stats=track_running_stats)
+        
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-        self.batchnorm = batchnorm
 
     def forward(self, x):
         residual = x
 
         out = self.conv1(x)
-        if self.batchnorm: out = self.bn1(out)
+        out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        if self.batchnorm: out = self.bn2(out)
+        out = self.bn2(out)
         out = self.relu(out)
 
         out = self.conv3(out)
-        if self.batchnorm: out = self.bn3(out)
+        out = self.bn3(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -204,39 +162,22 @@ class Bottleneck3d(nn.Module):
 class Bottleneck2d(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, feature_size=None, batchnorm=False, affine=True, track_running_stats=True, use_final_relu=True):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, track_running_stats=True, use_final_relu=True):
         super(Bottleneck2d, self).__init__()
-        bias = not batchnorm 
+        bias = False
         self.use_final_relu = use_final_relu
         self.conv1 = nn.Conv3d(inplanes, planes, kernel_size=1, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn1 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn1 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn1 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.conv2 = nn.Conv3d(planes, planes, kernel_size=(1,3,3), stride=(1,stride,stride), padding=(0,1,1), bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn2 = nn.InstanceNorm3d(planes, affine=affine)
-        elif batchnorm == 'layernorm':
-            feature_size = (feature_size[0]//1, math.ceil(feature_size[1]/stride), math.ceil(feature_size[2]/stride))
-            self.bn2 = nn.LayerNorm((planes, *feature_size))
-
+        self.bn2 = nn.BatchNorm3d(planes, track_running_stats=track_running_stats)
+        
         self.conv3 = nn.Conv3d(planes, planes * 4, kernel_size=1, bias=bias)
-        if batchnorm == 'batchnorm': 
-            self.bn3 = nn.BatchNorm3d(planes * 4, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            self.bn3 = nn.InstanceNorm3d(planes * 4, affine=affine)
-        elif batchnorm == 'layernorm':
-            self.bn3 = nn.LayerNorm((planes * 4, *feature_size))
-
+        self.bn3 = nn.BatchNorm3d(planes * 4, track_running_stats=track_running_stats)
+        
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-        self.batchnorm = batchnorm 
 
     def forward(self, x):
         residual = x
@@ -262,160 +203,63 @@ class Bottleneck2d(nn.Module):
 
 
 class ResNet2d3d_full(nn.Module):
-    def __init__(self,
-                 block,
-                 layers,
-                 sample_size,
-                 sample_duration,
-                 shortcut_type='B',
-                 batchnorm=False, 
-                 affine=True,
-                 track_running_stats=True,
-                 expand_factor=1):
-        self.inplanes = 64 * expand_factor
-        self.batchnorm = batchnorm 
-        self.affine=affine # affine for InsNorm
-        self.track_running_stats = track_running_stats
-        bias = not batchnorm 
+    def __init__(self, block, layers, track_running_stats=True):
         super(ResNet2d3d_full, self).__init__()
-        self.conv1 = nn.Conv3d(
-            3,
-            64*expand_factor,
-            kernel_size=(1,7,7),
-            stride=(1, 2, 2),
-            padding=(0, 3, 3),
-            bias=bias)
-        if batchnorm == 'batchnorm': 
-            print('=> use BatchNorm')
-            self.bn1 = nn.BatchNorm3d(64*expand_factor, track_running_stats=track_running_stats)
-        elif batchnorm == 'insnorm': 
-            print('=> use InstanceNorm with affine=%s' % str(affine))
-            self.bn1 = nn.InstanceNorm3d(64*expand_factor, affine=affine)
-        elif batchnorm == 'layernorm': 
-            print('=> use LayerNorm')
-            self.bn1 = nn.LayerNorm((64*expand_factor, sample_duration, math.ceil(sample_size/2), math.ceil(sample_size/2)))
-        elif batchnorm != '':
-            raise ValueError('BN choice is wrong')
-        else:
-            print('=> no BatchNorm or InstanceNorm or LayerNorm')
+        self.inplanes = 64
+        self.track_running_stats = track_running_stats
+        bias = False
+        self.conv1 = nn.Conv3d(3, 64, kernel_size=(1,7,7), stride=(1, 2, 2), padding=(0, 3, 3), bias=bias)
+        print('=> use BatchNorm')
+        self.bn1 = nn.BatchNorm3d(64, track_running_stats=track_running_stats)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1))
+        
         if not isinstance(block, list):
             block = [block] * 4
 
-        layer_size = [math.ceil(sample_size/4), math.ceil(sample_size/4), math.ceil(sample_size/8), math.ceil(sample_size/16)]
-        layer_duration = [sample_duration]
-        for i in block:
-            if (i == Bottleneck2d) or (i == BasicBlock2d):
-                layer_duration.append(layer_duration[-1])
-            else:
-                layer_duration.append(math.ceil(layer_duration[-1]/2))
-        self.layer_size = layer_size
-        self.layer_duration = layer_duration
-
-        self.layer1 = self._make_layer(block[0], 64*expand_factor, layers[0], shortcut_type, feature_size=(layer_duration[0],layer_size[0],layer_size[0]))
-        self.layer2 = self._make_layer(
-            block[1], 128*expand_factor, layers[1], shortcut_type, stride=2, feature_size=(layer_duration[1],layer_size[1],layer_size[1]))
-        self.layer3 = self._make_layer(
-            block[2], 256*expand_factor, layers[2], shortcut_type, stride=2, feature_size=(layer_duration[2],layer_size[2],layer_size[2]))
-        self.layer4 = self._make_layer(
-            block[3], 256*expand_factor, layers[3], shortcut_type, stride=2, feature_size=(layer_duration[3],layer_size[3],layer_size[3]), is_final=True)
+        self.layer1 = self._make_layer(block[0], 64, layers[0])
+        self.layer2 = self._make_layer(block[1], 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block[2], 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block[3], 256, layers[3], stride=2, is_final=True)
         # modify layer4 from exp=512 to exp=256
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
                 m.weight = nn.init.kaiming_normal_(m.weight, mode='fan_out')
                 if m.bias is not None: m.bias.data.zero_()
-                # nn.init.orthogonal_(m.weight, 1)
             elif isinstance(m, nn.BatchNorm3d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-            elif isinstance(m, nn.InstanceNorm3d):
-                if m.weight is not None:
-                    m.weight.data.fill_(1)
-                    m.bias.data.zero_()
-            elif isinstance(m, nn.LayerNorm):
-                if m.weight is not None:
-                    m.weight.data.fill_(1)
-                    m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, shortcut_type, stride=1, feature_size=(0,0,0), is_final=False):
+    def _make_layer(self, block, planes, blocks, stride=1, is_final=False):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
+            # customized_stride to deal with 2d or 3d residual blocks
             if (block == Bottleneck2d) or (block == BasicBlock2d):
-                customized_stride = (1, stride, stride) # todo
-                ds_feature_size = (math.ceil(feature_size[0]/customized_stride[0]),
-                                   math.ceil(feature_size[1]/customized_stride[1]),
-                                   math.ceil(feature_size[2]/customized_stride[2]))
+                customized_stride = (1, stride, stride)
             else:
                 customized_stride = stride
-                ds_feature_size = (math.ceil(feature_size[0]/customized_stride),
-                                   math.ceil(feature_size[1]/customized_stride),
-                                   math.ceil(feature_size[2]/customized_stride))
 
-            if shortcut_type == 'A':
-                downsample = partial(
-                    downsample_basic_block,
-                    planes=planes * block.expansion,
-                    stride=customized_stride)
-            else:
-                if self.batchnorm == 'batchnorm':
-                    downsample = nn.Sequential(
-                    nn.Conv3d(
-                        self.inplanes,
-                        planes * block.expansion,
-                        kernel_size=1,
-                        stride=customized_stride,
-                        bias=False), 
-                    nn.BatchNorm3d(planes * block.expansion, track_running_stats=self.track_running_stats)
-                    )
-                elif self.batchnorm == 'insnorm':
-                    downsample = nn.Sequential(
-                    nn.Conv3d(
-                        self.inplanes,
-                        planes * block.expansion,
-                        kernel_size=1,
-                        stride=customized_stride,
-                        bias=False), 
-                    nn.InstanceNorm3d(planes * block.expansion, affine=self.affine)
-                    )
-                elif self.batchnorm == 'layernorm':
-                    downsample = nn.Sequential(
-                    nn.Conv3d(
-                        self.inplanes,
-                        planes * block.expansion,
-                        kernel_size=1,
-                        stride=customized_stride,
-                        bias=False), 
-                    nn.LayerNorm((planes * block.expansion, *ds_feature_size))
-                    )
-                else:
-                    downsample = nn.Sequential(
-                        nn.Conv3d(
-                            self.inplanes,
-                            planes * block.expansion,
-                            kernel_size=1,
-                            stride=customized_stride,
-                            bias=True), 
-                        )
-        else:
-            ds_feature_size = feature_size
+            downsample = nn.Sequential(
+                nn.Conv3d(self.inplanes, planes * block.expansion, kernel_size=1, stride=customized_stride, bias=False), 
+                nn.BatchNorm3d(planes * block.expansion, track_running_stats=self.track_running_stats)
+                )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, feature_size=feature_size, batchnorm=self.batchnorm, affine=self.affine, track_running_stats=self.track_running_stats))
+        layers.append(block(self.inplanes, planes, stride, downsample, track_running_stats=self.track_running_stats))
         self.inplanes = planes * block.expansion
-        if is_final:
+        if is_final: # if is final block, no ReLU in the final output
             for i in range(1, blocks-1):
-                layers.append(block(self.inplanes, planes, feature_size=ds_feature_size, batchnorm=self.batchnorm, affine=self.affine, track_running_stats=self.track_running_stats))
-            layers.append(block(self.inplanes, planes, feature_size=ds_feature_size, batchnorm=self.batchnorm, affine=self.affine, track_running_stats=self.track_running_stats, use_final_relu=False))
+                layers.append(block(self.inplanes, planes, track_running_stats=self.track_running_stats))
+            layers.append(block(self.inplanes, planes, track_running_stats=self.track_running_stats, use_final_relu=False))
         else:
             for i in range(1, blocks):
-                layers.append(block(self.inplanes, planes, feature_size=ds_feature_size, batchnorm=self.batchnorm, affine=self.affine, track_running_stats=self.track_running_stats))
+                layers.append(block(self.inplanes, planes, track_running_stats=self.track_running_stats))
                 
         return nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.conv1(x)
-        if self.batchnorm: x = self.bn1(x)
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
@@ -429,55 +273,39 @@ class ResNet2d3d_full(nn.Module):
 
 ## full resnet
 def resnet18_2d3d_full(**kwargs):
-    """Constructs a ResNet-18 model.
-    """
+    '''Constructs a ResNet-18 model. '''
     model = ResNet2d3d_full([BasicBlock2d, BasicBlock2d, BasicBlock3d, BasicBlock3d], 
                    [2, 2, 2, 2], **kwargs)
     return model
 
 def resnet34_2d3d_full(**kwargs):
-    """Constructs a ResNet-34 model.
-    """
+    '''Constructs a ResNet-34 model. '''
     model = ResNet2d3d_full([BasicBlock2d, BasicBlock2d, BasicBlock3d, BasicBlock3d], 
                    [3, 4, 6, 3], **kwargs)
     return model
 
 def resnet50_2d3d_full(**kwargs):
-    """Constructs a ResNet-50 model.
-    """
+    '''Constructs a ResNet-50 model. '''
     model = ResNet2d3d_full([Bottleneck2d, Bottleneck2d, Bottleneck3d, Bottleneck3d], 
                    [3, 4, 6, 3], **kwargs)
     return model
 
 def resnet101_2d3d_full(**kwargs):
-    """Constructs a ResNet-101 model.
-    """
+    '''Constructs a ResNet-101 model. '''
     model = ResNet2d3d_full([Bottleneck2d, Bottleneck2d, Bottleneck3d, Bottleneck3d], 
                    [3, 4, 23, 3], **kwargs)
     return model
 
 def resnet152_2d3d_full(**kwargs):
-    """Constructs a ResNet-101 model.
-    """
+    '''Constructs a ResNet-101 model. '''
     model = ResNet2d3d_full([Bottleneck2d, Bottleneck2d, Bottleneck3d, Bottleneck3d], 
                    [3, 8, 36, 3], **kwargs)
     return model
 
 def resnet200_2d3d_full(**kwargs):
-    """Constructs a ResNet-101 model.
-    """
+    '''Constructs a ResNet-101 model. '''
     model = ResNet2d3d_full([Bottleneck2d, Bottleneck2d, Bottleneck3d, Bottleneck3d], 
                    [3, 24, 36, 3], **kwargs)
-    return model
-
-def neq_load(model, name):
-    ''' load pre-trained model in a not-equal way,
-    when new model has been modified '''
-    pretrained_dict = model_zoo.load_url(model_urls[name])
-    model_dict = model.state_dict()
-    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-    model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)
     return model
 
 def neq_load_customized(model, pretrained_dict):
@@ -507,10 +335,7 @@ def neq_load_customized(model, pretrained_dict):
 
 
 if __name__ == '__main__':
-    mymodel = resnet18_2d3d(shortcut_type='B',
-                            sample_size=128,
-                            sample_duration=16,
-                            batchnorm='insnorm')
+    mymodel = resnet18_2d3d_full()
     mydata = torch.FloatTensor(4, 3, 16, 128, 128)
     nn.init.normal_(mydata)
     import ipdb; ipdb.set_trace()

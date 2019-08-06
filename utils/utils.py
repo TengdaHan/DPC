@@ -10,16 +10,6 @@ plt.switch_backend('agg')
 from collections import deque
 from tqdm import tqdm 
 
-
-def set_path(args):
-    exp_path = '{0}{args.net}_bs{args.batch_size}_lr{args.lr}_ep{args.epochs}{1}'.format(
-                'resumed_' if args.resume else '', '_pt' if args.pretrain else '', args=args)
-    img_path = os.path.join(exp_path, 'img')
-    model_path = os.path.join(exp_path, 'model')
-    if not os.path.exists(img_path): os.makedirs(img_path)
-    if not os.path.exists(model_path): os.makedirs(model_path)
-    return img_path, model_path
-
 def save_checkpoint(state, is_best=0, gap=1, filename='models/checkpoint.pth.tar', keep_all=False):
     torch.save(state, filename)
     last_epoch_path = os.path.join(os.path.dirname(filename),
@@ -75,6 +65,12 @@ def calc_accuracy_binary(output, target):
     acc = torch.mean((pred == target.byte()).float())
     del pred, output, target
     return acc
+
+def denorm(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    assert len(mean)==len(std)==3
+    inv_mean = [-mean[i]/std[i] for i in range(3)]
+    inv_std = [1/i for i in std]
+    return transforms.Normalize(mean=inv_mean, std=inv_std)
 
 
 class AverageMeter(object):
@@ -194,46 +190,6 @@ class ConfusionMeter(object):
         #         self.recall.append(self.mat[i,i] / np.sum(self.mat[:,i]))
         # print('Average Precision: %0.4f' % np.mean(self.precision))
         # print('Average Recall: %0.4f' % np.mean(self.recall))
-
-
-class LabelQueue(object):
-    '''a queue to store the action labels (string) at the top/bottom performance '''
-    def __init__(self, length=10, mode='max'):
-        self.queue = []
-        self.label = []
-        self.length = length
-        self.max_label = 0
-        self.min_label = 0
-        self.mode = mode
-        assert self.mode in ['max', 'min']
-
-    def update(self, label, val):
-        if len(self.label) < self.length: # append to the queue
-            self._append(label, val)
-        else: # update the queue
-            if self.mode == 'max':
-                if label > self.min_label:
-                    self.label.pop(self.min_id); self.queue.pop(self.min_id)
-                    self._append(label, val)
-            elif self.mode == 'min':
-                if label < self.max_label:
-                    self.label.pop(self.max_id); self.queue.pop(self.max_id)
-                    self._append(label, val)
-
-    def _append(self, label, val):
-        assert len(self.queue) == len(self.label)
-        self.queue.append(val)
-        self.label.append(label)
-        self.max_label = np.max(self.label)
-        self.max_id = np.argmax(self.label)
-        self.min_label = np.min(self.label)
-        self.min_id = np.argmin(self.label)
-
-    def get_value(self):
-        return self.label, self.queue
-
-    def __len__(self):
-        return len(self.label)
 
 
 

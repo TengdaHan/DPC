@@ -139,8 +139,12 @@ def main():
     global de_normalize; de_normalize = denorm()
     global img_path; img_path, model_path = set_path(args)
     global writer_train
-    writer_val = SummaryWriter(log_dir=os.path.join(img_path, 'val'))
-    writer_train = SummaryWriter(log_dir=os.path.join(img_path, 'train'))
+    try: # old version
+        writer_val = SummaryWriter(log_dir=os.path.join(img_path, 'val'))
+        writer_train = SummaryWriter(log_dir=os.path.join(img_path, 'train'))
+    except: # v1.7
+        writer_val = SummaryWriter(logdir=os.path.join(img_path, 'val'))
+        writer_train = SummaryWriter(logdir=os.path.join(img_path, 'train'))
     
     ### main loop ###
     for epoch in range(args.start_epoch, args.epochs):

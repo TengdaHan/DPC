@@ -50,7 +50,6 @@ parser.add_argument('--prefix', default='tmp', type=str)
 parser.add_argument('--test_type', default='c', help='different types to load testing data')
 parser.add_argument('--optim', default='adam', help='adam or sgd')
 parser.add_argument('--img_dim', default=128, type=int)
-parser.add_argument('--five_crop', action='store_true')
 
 
 def main():
@@ -97,10 +96,10 @@ def main():
 
     optimizer = optim.Adam(params, lr=args.lr, weight_decay=args.wd)
     if args.dataset == 'hmdb51':
-        lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[150,250,300], repeat=2)
+        lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[150,250,300], repeat=1)
     elif args.dataset == 'ucf101':
-        if args.img_dim == 224: lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[300,400,500], repeat=2)
-        else: lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[60, 80, 100], repeat=2)
+        if args.img_dim == 224: lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[300,400,500], repeat=1)
+        else: lr_lambda = lambda ep: MultiStepLR_Restart_Multiplier(ep, gamma=0.1, step=[60, 80, 100], repeat=1)
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 
     args.old_lr = None
@@ -116,13 +115,11 @@ def main():
             try: model.load_state_dict(checkpoint['state_dict'])
             except:
                 print('=> [Warning]: weight structure is not equal to test model; Use non-equal load ==')
-                vis_embed = args.vis_embed
                 model = neq_load_customized(model, checkpoint['state_dict'])
             print("=> loaded testing checkpoint '{}' (epoch {})".format(args.test, checkpoint['epoch']))
             global num_epoch; num_epoch = checkpoint['epoch']
         elif args.test == 'random':
             print("=> [Warning] loaded random weights")
-            vis_embed = args.vis_embed
         else: 
             raise ValueError()
 
@@ -133,7 +130,7 @@ def main():
             Normalize()
         ])
         test_loader = get_data(transform, 'test')
-        test_loss, test_acc = test(test_loader, model, vis_embed)
+        test_loss, test_acc = test(test_loader, model)
         sys.exit()
     else: # not test
         torch.backends.cudnn.benchmark = True
@@ -190,8 +187,12 @@ def main():
     global de_normalize; de_normalize = denorm()
     global img_path; img_path, model_path = set_path(args)
     global writer_train
-    writer_val = SummaryWriter(log_dir=os.path.join(img_path, 'val'))
-    writer_train = SummaryWriter(log_dir=os.path.join(img_path, 'train'))
+    try: # old version
+        writer_val = SummaryWriter(log_dir=os.path.join(img_path, 'val'))
+        writer_train = SummaryWriter(log_dir=os.path.join(img_path, 'train'))
+    except: # v1.7
+        writer_val = SummaryWriter(logdir=os.path.join(img_path, 'val'))
+        writer_train = SummaryWriter(logdir=os.path.join(img_path, 'train'))
 
     ### main loop ###
     for epoch in range(args.start_epoch, args.epochs):
@@ -304,101 +305,40 @@ def validate(data_loader, model):
           'Acc: {acc.avg:.4f} \t'.format(loss=losses, acc=accuracy))
     return losses.avg, accuracy.avg
 
-def test(data_loader, model, vis_embed=False):
+def test(data_loader, model):
     losses = AverageMeter()
     acc_top1 = AverageMeter()
     acc_top5 = AverageMeter()
     confusion_mat = ConfusionMeter(args.num_class)
-    if vis_embed: 
-        embed_list = []; target_list = []
-        test_log = os.path.exists(os.path.join(args.test[:-6], 'test'))
-        if not os.path.exists(test_log):
-            os.makedirs(test_log)
-        writer_test = SummaryWriter(log_dir=test_log) # log_dir not working
     model.eval()
     with torch.no_grad():
-        if args.five_crop:
-            # for crop_idx in [5]:
-            crop_idx = 5
-            for direction in [None]:
-                print('Now testing: ', direction)
-                new_transform = transforms.Compose([
-                    CenterCrop(consistent=True, size=(192,256)), # remove black bar?? - 11:54AM 
-                    FiveCropSplit(size=180, idx=crop_idx),
-                    RandomHorizontalFlip(consistent=True, command=direction),
-                    Scale(size=(args.img_dim,args.img_dim)),
-                    ToTensor(),
-                    Normalize()
-                    ])
+        for idx, (input_seq, target) in tqdm(enumerate(data_loader), total=len(data_loader)):
+            input_seq = input_seq.to(cuda)
+            target = target.to(cuda)
+            B = input_seq.size(0)
+            h0 = model.module.init_hidden(B)
+            if args.test_type == 'c': input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
+            output, _ = model(input_seq, h0)
+            del input_seq
+            top1, top5 = calc_topk_accuracy(torch.mean(
+                                            torch.mean(
+                                                nn.functional.softmax(output,2),
+                                                0),0, keepdim=True), 
+                                            target, (1,5))
+            acc_top1.update(top1.item(), B)
+            acc_top5.update(top5.item(), B)
+            del top1, top5
 
-                data_loader.dataset.transform = new_transform
-                for idx, (input_seq, target) in tqdm(enumerate(data_loader), total=len(data_loader)):
-                    input_seq = input_seq.to(cuda)
-                    target = target.to(cuda)
-                    B = input_seq.size(0)
-                    h0 = model.module.init_hidden(B)
-                    if args.test_type == 'c': input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
-                    output, feature = model(input_seq, h0)
-                    del input_seq, feature
-                    top1, top5 = calc_topk_accuracy(torch.mean(
-                                                    torch.mean(
-                                                        nn.functional.softmax(output,2),
-                                                        0),0, keepdim=True), 
-                                                    target, (1,5))
+            output = torch.mean(torch.mean(output, 0), 0, keepdim=True)
+            loss = criterion(output, target.squeeze(-1))
 
-                    output = torch.mean(torch.mean(output, 0), 0, keepdim=True)
-                    if vis_embed:
-                        raise NotImplementedError()
-                        feature = torch.mean(torch.mean(feature, 0), 0, keepdim=True)
-                        target_list.append(target.data)
-                        embed_list.append(feature.data)
-                    loss = criterion(output, target.squeeze(-1))
-
-                    losses.update(loss.item(), B)
-                    acc_top1.update(top1.item(), B)
-                    acc_top5.update(top5.item(), B)
-
-                    _, pred = torch.max(output, 1)
-                    confusion_mat.update(pred, target.view(-1).byte())
-        else:
-            for idx, (input_seq, target) in tqdm(enumerate(data_loader), total=len(data_loader)):
-                input_seq = input_seq.to(cuda)
-                target = target.to(cuda)
-                B = input_seq.size(0)
-                h0 = model.module.init_hidden(B)
-                if args.test_type == 'c': input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
-                output, _ = model(input_seq, h0)
-                del input_seq
-                top1, top5 = calc_topk_accuracy(torch.mean(
-                                                torch.mean(
-                                                    nn.functional.softmax(output,2),
-                                                    0),0, keepdim=True), 
-                                                target, (1,5))
-                acc_top1.update(top1.item(), B)
-                acc_top5.update(top5.item(), B)
-                del top1, top5
-
-                output = torch.mean(torch.mean(output, 0), 0, keepdim=True)
-                if vis_embed:
-                    raise NotImplementedError()
-                    # feature = torch.mean(torch.mean(feature, 0), 0, keepdim=True)
-                    # target_list.append(target.data)
-                    # embed_list.append(feature.data)
-                loss = criterion(output, target.squeeze(-1))
-
-                losses.update(loss.item(), B)
-                del loss
+            losses.update(loss.item(), B)
+            del loss
 
 
-                _, pred = torch.max(output, 1)
-                confusion_mat.update(pred, target.view(-1).byte())
-
-    if vis_embed: 
-        raise NotImplementedError() 
-        embed_list = torch.cat(embed_list, 0)
-        embed_list = embed_list / embed_list.norm(dim=1, keepdim=True)
-        target_list = torch.cat(target_list, 0)
-        writer_test.add_embedding(embed_list, metadata=[dataset.decode_action(i) for i in target_list.squeeze().tolist()])        
+            _, pred = torch.max(output, 1)
+            confusion_mat.update(pred, target.view(-1).byte())
+      
     print('Loss {loss.avg:.4f}\t'
           'Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5))
     confusion_mat.plot_mat(args.test+'.svg')

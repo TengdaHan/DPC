@@ -1,10 +1,5 @@
-import os
-import sys
-import argparse
-import re
+import os, sys, time, re, argparse, numpy as np
 from tqdm import tqdm
-import time
-import numpy as np
 from tensorboardX import SummaryWriter
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')

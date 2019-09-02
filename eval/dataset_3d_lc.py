@@ -1,19 +1,12 @@
 import torch
 from torch.utils import data
 from torchvision import transforms
-import glob
-import os
-import sys
-import csv
-import pandas as pd
-import numpy as np
+import os, sys, time, pickle, csv, glob, pandas as pd, numpy as np
 import cv2
 sys.path.append('../utils')
 from augmentation import *
 from tqdm import tqdm
-import pickle
 from joblib import Parallel, delayed
-import time
 
 def pil_loader(path):
     with open(path, 'rb') as f:
@@ -25,21 +18,17 @@ class UCF101_3d(data.Dataset):
                  mode='train',
                  transform=None,
                  seq_len=10,
-                 num_seq = 1,
+                 num_seq =1,
                  downsample=3,
                  epsilon=5,
-                 num_proposal=3,
-                 which_split=1,
-                 test_type='c'):
+                 which_split=1):
         self.mode = mode
         self.transform = transform
         self.seq_len = seq_len
         self.num_seq = num_seq
         self.downsample = downsample
         self.epsilon = epsilon
-        self.num_proposal = num_proposal
         self.which_split = which_split
-        self.test_type = test_type # define how to sample frames for test
 
         # splits
         if mode == 'train':
@@ -155,21 +144,17 @@ class HMDB51_3d(data.Dataset):
                  mode='train',
                  transform=None,
                  seq_len=10,
-                 num_seq = 1,
+                 num_seq=1,
                  downsample=1,
                  epsilon=5,
-                 num_proposal=3,
-                 which_split=1,
-                 test_type='c'):
+                 which_split=1):
         self.mode = mode
         self.transform = transform
         self.seq_len = seq_len
         self.num_seq = num_seq
         self.downsample = downsample
         self.epsilon = epsilon
-        self.num_proposal = num_proposal
         self.which_split = which_split
-        self.test_type = test_type # define how to sample frames for test
 
         # splits
         if mode == 'train':

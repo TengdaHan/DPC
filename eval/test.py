@@ -1,10 +1,5 @@
-import os
-import sys
-import argparse
-import re
-import numpy as np
+import os, sys, time, argparse, re, numpy as np
 from tqdm import tqdm
-import time
 from tensorboardX import SummaryWriter
 
 sys.path.append('../utils')
@@ -45,7 +40,6 @@ parser.add_argument('--print_freq', default=5, type=int)
 parser.add_argument('--reset_lr', action='store_true', help='Reset learning rate when resume training?')
 parser.add_argument('--train_what', default='last', type=str, help='Train what parameters?')
 parser.add_argument('--prefix', default='tmp', type=str)
-parser.add_argument('--test_type', default='c', help='different types to load testing data')
 parser.add_argument('--img_dim', default=128, type=int)
 
 
@@ -105,7 +99,6 @@ def main():
 
     ### restart training ###
     if args.test:
-        print("=> load testing set in mode '%s'" % args.test_type)
         if os.path.isfile(args.test):
             print("=> loading testing checkpoint '{}'".format(args.test))
             checkpoint = torch.load(args.test)
@@ -314,7 +307,7 @@ def test(data_loader, model):
             target = target.to(cuda)
             B = input_seq.size(0)
             h0 = model.module.init_hidden(B)
-            if args.test_type == 'c': input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
+            input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
             output, _ = model(input_seq, h0)
             del input_seq
             top1, top5 = calc_topk_accuracy(torch.mean(
@@ -339,7 +332,7 @@ def test(data_loader, model):
     print('Loss {loss.avg:.4f}\t'
           'Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5))
     confusion_mat.plot_mat(args.test+'.svg')
-    write_log(content='test type {args.test_type}\nLoss {loss.avg:.4f}\t Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5, args=args),
+    write_log(content='Loss {loss.avg:.4f}\t Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5, args=args),
               epoch=num_epoch,
               filename=os.path.dirname(args.test)+'/test_log.md')
     import ipdb; ipdb.set_trace()
@@ -354,7 +347,6 @@ def get_data(transform, mode='train'):
                          seq_len=args.seq_len,
                          num_seq=args.num_seq,
                          downsample=args.ds,
-                         test_type=args.test_type,
                          which_split=args.split)
     elif args.dataset == 'hmdb51':
         dataset = HMDB51_3d(mode=mode, 
@@ -362,7 +354,6 @@ def get_data(transform, mode='train'):
                          seq_len=args.seq_len,
                          num_seq=args.num_seq,
                          downsample=1,
-                         test_type=args.test_type,
                          which_split=args.split)
     else:
         raise ValueError('dataset not supported')

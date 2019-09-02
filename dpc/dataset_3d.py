@@ -1,19 +1,12 @@
 import torch
 from torch.utils import data
 from torchvision import transforms
-import glob
-import os
-import sys
-import csv
-import pandas as pd
-import numpy as np
+import os, sys, time, pickle, glob, csv, pandas as pd, numpy as np
 import cv2
 sys.path.append('../utils')
 from augmentation import *
 from tqdm import tqdm
-import pickle
 from joblib import Parallel, delayed
-import time
 
 def pil_loader(path):
     with open(path, 'rb') as f:

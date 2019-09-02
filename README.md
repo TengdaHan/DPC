@@ -10,7 +10,7 @@ Links: [[Arxiv]()] [[Project page]()]
 
 The implementation should work with python >= 3.6, pytorch >= 0.4, torchvision >= 0.2.2. 
 
-The repo also requires cv2 (`conda install -c menpo opencv`), tensorboardX>=1.7 (`pip install tensorboardX`), joblib, tqdm, ipdb.
+The repo also requires cv2 (`conda install -c menpo opencv`), tensorboardX >= 1.7 (`pip install tensorboardX`), joblib, tqdm, ipdb.
 
 ### Prepare data
 

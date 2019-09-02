@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import sys
-sys.path.append('../../backbone')
+sys.path.append('../backbone')
 from select_backbone import select_resnet
 from convrnn import ConvGRU
 
@@ -25,16 +25,16 @@ class LC(nn.Module):
         self.last_size = int(math.ceil(sample_size / 32))
         track_running_stats = True 
 
-        self.resnet, self.param = select_resnet(network, track_running_stats=track_running_stats)
+        self.backbone, self.param = select_resnet(network, track_running_stats=track_running_stats)
         self.param['num_layers'] = 1
         self.param['hidden_size'] = self.param['feature_size']
 
         print('=> using ConvRNN, kernel_size = 1')
-        self.convrnn = ConvGRU(input_size=self.param['feature_size'],
+        self.agg = ConvGRU(input_size=self.param['feature_size'],
                                hidden_size=self.param['hidden_size'],
                                kernel_size=1,
                                num_layers=self.param['num_layers'])
-        self._initialize_weights(self.convrnn)
+        self._initialize_weights(self.agg)
 
         self.final_bn = nn.BatchNorm1d(self.param['feature_size'])
         self.final_bn.weight.data.fill_(1)
@@ -48,13 +48,13 @@ class LC(nn.Module):
         # seq1: [B, N, C, SL, W, H]
         (B, N, C, SL, H, W) = block.shape
         block = block.view(B*N, C, SL, H, W)
-        feature = self.resnet(block)
+        feature = self.backbone(block)
         del block 
         feature = F.relu(feature)
         
         feature = F.avg_pool3d(feature, (self.last_duration, 1, 1), stride=1)
         feature = feature.view(B, N, self.param['feature_size'], self.last_size, self.last_size) # [B*N,D,last_size,last_size]
-        context, _ = self.convrnn(feature)
+        context, _ = self.agg(feature)
         context = context[:,-1,:].unsqueeze(1)
         context = F.avg_pool3d(context, (1, self.last_size, self.last_size), stride=1).squeeze(-1).squeeze(-1)
         del feature

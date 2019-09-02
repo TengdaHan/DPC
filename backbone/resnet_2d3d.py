@@ -209,7 +209,6 @@ class ResNet2d3d_full(nn.Module):
         self.track_running_stats = track_running_stats
         bias = False
         self.conv1 = nn.Conv3d(3, 64, kernel_size=(1,7,7), stride=(1, 2, 2), padding=(0, 3, 3), bias=bias)
-        print('=> use BatchNorm')
         self.bn1 = nn.BatchNorm3d(64, track_running_stats=track_running_stats)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1))

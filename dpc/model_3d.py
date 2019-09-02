@@ -22,16 +22,15 @@ class DPC_RNN(nn.Module):
         self.num_seq = num_seq
         self.seq_len = seq_len
         self.pred_step = pred_step
-        self.pooled_size = pooled_size
         self.last_duration = int(math.ceil(seq_len / 4))
         self.last_size = int(math.ceil(sample_size / 32))
         print('final feature map has size %dx%d' % (self.last_size, self.last_size))
 
-        self.resnet, self.param = select_resnet(network, track_running_stats=False)
+        self.backbone, self.param = select_resnet(network, track_running_stats=False)
         self.param['num_layers'] = 1 # param for GRU
         self.param['hidden_size'] = self.param['feature_size'] # param for GRU
 
-        self.convrnn = ConvGRU(input_size=self.param['feature_size'],
+        self.agg = ConvGRU(input_size=self.param['feature_size'],
                                hidden_size=self.param['hidden_size'],
                                kernel_size=1,
                                num_layers=self.param['num_layers'])
@@ -40,9 +39,9 @@ class DPC_RNN(nn.Module):
                                 nn.ReLU(inplace=True),
                                 nn.Conv2d(self.param['feature_size'], self.param['feature_size'], kernel_size=1, padding=0)
                                 )
-
+        self.mask = None
         self.relu = nn.ReLU(inplace=False)
-        self._initialize_weights(self.convrnn)
+        self._initialize_weights(self.agg)
         self._initialize_weights(self.network_pred)
 
     def forward(self, block):
@@ -50,7 +49,7 @@ class DPC_RNN(nn.Module):
         ### extract feature ###
         (B, N, C, SL, H, W) = block.shape
         block = block.view(B*N, C, SL, H, W)
-        feature = self.resnet(block)
+        feature = self.backbone(block)
         del block
         feature = F.avg_pool3d(feature, (self.last_duration, 1, 1), stride=(1, 1, 1))
 
@@ -61,7 +60,7 @@ class DPC_RNN(nn.Module):
         del feature_inf_all
 
         ### aggregate, predict future ###
-        _, hidden = self.convrnn(feature[:, 0:N-self.pred_step, :].contiguous())
+        _, hidden = self.agg(feature[:, 0:N-self.pred_step, :].contiguous())
         hidden = hidden[:,-1,:] # after tanh, (-1,1). get the hidden state of last layer, last time step
         
         pred = []
@@ -69,7 +68,7 @@ class DPC_RNN(nn.Module):
             # sequentially pred future
             p_tmp = self.network_pred(hidden)
             pred.append(p_tmp)
-            _, hidden = self.convrnn(self.relu(p_tmp).unsqueeze(1), hidden.unsqueeze(0))
+            _, hidden = self.agg(self.relu(p_tmp).unsqueeze(1), hidden.unsqueeze(0))
             hidden = hidden[:,-1,:]
         pred = torch.stack(pred, 1) # B, pred_step, xxx
         del hidden

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 from collections import deque
 from tqdm import tqdm 
+from torchvision import transforms
 
 def save_checkpoint(state, is_best=0, gap=1, filename='models/checkpoint.pth.tar', keep_all=False):
     torch.save(state, filename)

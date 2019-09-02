@@ -173,7 +173,7 @@ def main():
                          'iteration': iteration}, 
                          is_best, filename=os.path.join(model_path, 'epoch%s.pth.tar' % str(epoch+1)), keep_all=False)
 
-    print('Training form ep %d to ep %d finished' % (args.start_epoch, args.epochs))
+    print('Training from ep %d to ep %d finished' % (args.start_epoch, args.epochs))
 
 def process_output(mask):
     '''task mask as input, compute the target for contrastive loss'''
@@ -275,8 +275,8 @@ def validate(data_loader, model, epoch):
             accuracy_list[1].update(top3.item(), B)
             accuracy_list[2].update(top5.item(), B)
 
-    print('[{3}/{4}] Loss {loss.local_avg:.4f}\t'
-          'Acc: top1 {0:.4f}; top3 {1:.4f}; top5 {2:.4f} \t'.format(
+    print('[{0}/{1}] Loss {loss.local_avg:.4f}\t'
+          'Acc: top1 {2:.4f}; top3 {3:.4f}; top5 {4:.4f} \t'.format(
            epoch, args.epochs, *[i.avg for i in accuracy_list], loss=losses))
     return losses.local_avg, accuracy.local_avg, [i.local_avg for i in accuracy_list]
 
@@ -329,7 +329,7 @@ bs{args.batch_size}_lr{1}_seq{args.num_seq}_pred{args.pred_step}_len{args.seq_le
 train-{args.train_what}{2}'.format(
                     'r%s' % args.net[6::], \
                     args.old_lr if args.old_lr is not None else args.lr, \
-                    '_pt=%s' % (args.pretrain.split('/')[-3]) if args.pretrain else '', \
+                    '_pt=%s' % args.pretrain.replace('/','-') if args.pretrain else '', \
                     args=args)
     img_path = os.path.join(exp_path, 'img')
     model_path = os.path.join(exp_path, 'model')

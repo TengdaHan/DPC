@@ -1,4 +1,9 @@
-import os, sys, time, re, argparse, numpy as np
+import os
+import sys
+import time
+import re
+import argparse
+import numpy as np
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 import matplotlib.pyplot as plt

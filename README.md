@@ -2,7 +2,7 @@
 
 This repository contains the implementation of Dense Predictive Coding (DPC). 
 
-Links: [[Arxiv]()] [[Project page]()]
+Links: [[Arxiv](https://arxiv.org/abs/1909.04656)] [Project page: comming soon]
 
 ![arch](asset/arch.png)
 
@@ -46,7 +46,7 @@ Change directory `cd DPC/eval/`
 
 ### DPC-pretrained weights
 
-It took us more than 1 week to train the 3D-ResNet18 DPC model, and it tooks about 6 weeks to train the 3D-ResNet34 DPC model (with 4 Nvidia P40 GPUs). 
+It took us **more than 1 week** to train the 3D-ResNet18 DPC model on Kinetics-400 with 128x128 resolution, and it tooks about **6 weeks** to train the 3D-ResNet34 DPC model on Kinetics-400 with 224x224 resolution (with 4 Nvidia P40 GPUs). 
 
 Download link: [3D-ResNet18-Kinetics400-128x128](https://drive.google.com/file/d/1jbMg2EAX8armIQA6_0YwfATh_h7rQz4u/view?usp=sharing), [3D-ResNet34-Kinetics400-224x224](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing)
 
@@ -57,15 +57,16 @@ Download link: [3D-ResNet18-Kinetics400-128x128](https://drive.google.com/file/d
 
 ### Citation
 
-If you find the repo useful for your research, please consider cite our paper: 
+If you find the repo useful for your research, please consider citing our paper: 
 ```
 @article{han2019dpc,
   title={Video Representation Learning by Dense Predictive Coding},
   author={Han, Tengda and Xie, Weidi and Zisserman, Andrew},
-  journal={arXiv preprint arXiv:?},
+  journal={arXiv preprint arXiv:1909.04656},
   year={2019}
 }
 ```
+For any questions, welcome to create an issue or contact Tengda Han ([htd@robots.ox.ac.uk](mailto:htd@robots.ox.ac.uk)).
 
 
 

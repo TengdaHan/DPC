@@ -311,9 +311,8 @@ def test(data_loader, model):
             input_seq = input_seq.to(cuda)
             target = target.to(cuda)
             B = input_seq.size(0)
-            h0 = model.module.init_hidden(B)
             input_seq = input_seq.squeeze(0) # squeeze the '1' batch dim
-            output, _ = model(input_seq, h0)
+            output, _ = model(input_seq)
             del input_seq
             top1, top5 = calc_topk_accuracy(torch.mean(
                                             torch.mean(

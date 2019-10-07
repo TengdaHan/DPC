@@ -73,6 +73,9 @@ class UCF101_3d(data.Dataset):
         '''sample index from a video'''
         if vlen-self.num_seq*self.seq_len*self.downsample <= 0: return [None]
         n = 1
+        if self.mode == 'test':
+            seq_idx_block = np.arange(0, vlen, self.downsample) # all possible frames with downsampling
+            return [seq_idx_block, vpath]
         start_idx = np.random.choice(range(vlen-self.num_seq*self.seq_len*self.downsample), n)
         seq_idx = np.expand_dims(np.arange(self.num_seq), -1)*self.downsample*self.seq_len + start_idx
         seq_idx_block = seq_idx + np.expand_dims(np.arange(self.seq_len),0)*self.downsample
@@ -199,6 +202,9 @@ class HMDB51_3d(data.Dataset):
         '''sample index from a video'''
         if vlen-self.num_seq*self.seq_len*self.downsample <= 0: return [None]
         n = 1
+        if self.mode == 'test':
+            seq_idx_block = np.arange(0, vlen, self.downsample) # all possible frames with downsampling
+            return [seq_idx_block, vpath]
         start_idx = np.random.choice(range(vlen-self.num_seq*self.seq_len*self.downsample), n)
         seq_idx = np.expand_dims(np.arange(self.num_seq), -1)*self.downsample*self.seq_len + start_idx
         seq_idx_block = seq_idx + np.expand_dims(np.arange(self.seq_len),0)*self.downsample

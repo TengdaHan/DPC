@@ -149,7 +149,7 @@ class ConfusionMeter(object):
         pred, tar = pred.cpu().numpy(), tar.cpu().numpy()
         pred = np.squeeze(pred)
         tar = np.squeeze(tar)
-        for p,t in tqdm(zip(pred.flat, tar.flat), total=len(pred.flat)):
+        for p,t in zip(pred.flat, tar.flat):
             self.mat[p][t] += 1
 
     def print_mat(self):

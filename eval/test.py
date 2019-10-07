@@ -34,7 +34,7 @@ parser.add_argument('--dropout', default=0.5, type=float)
 parser.add_argument('--ds', default=3, type=int)
 parser.add_argument('--batch_size', default=4, type=int)
 parser.add_argument('--lr', default=1e-3, type=float)
-parser.add_argument('--wd', default=1e-4, type=float, help='weight decay')
+parser.add_argument('--wd', default=1e-3, type=float, help='weight decay')
 parser.add_argument('--resume', default='', type=str)
 parser.add_argument('--pretrain', default='random', type=str)
 parser.add_argument('--test', default='', type=str)
@@ -338,7 +338,7 @@ def test(data_loader, model):
     confusion_mat.plot_mat(args.test+'.svg')
     write_log(content='Loss {loss.avg:.4f}\t Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5, args=args),
               epoch=num_epoch,
-              filename=os.path.dirname(args.test)+'/test_log.md')
+              filename=ps.path.join(os.path.dirname(args.test), 'test_log.md'))
     import ipdb; ipdb.set_trace()
     return losses.avg, [acc_top1.avg, acc_top5.avg]
 
@@ -357,7 +357,7 @@ def get_data(transform, mode='train'):
                          transform=transform, 
                          seq_len=args.seq_len,
                          num_seq=args.num_seq,
-                         downsample=1,
+                         downsample=args.ds,
                          which_split=args.split)
     else:
         raise ValueError('dataset not supported')

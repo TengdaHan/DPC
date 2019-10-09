@@ -338,7 +338,7 @@ def test(data_loader, model):
     confusion_mat.plot_mat(args.test+'.svg')
     write_log(content='Loss {loss.avg:.4f}\t Acc top1: {top1.avg:.4f} Acc top5: {top5.avg:.4f} \t'.format(loss=losses, top1=acc_top1, top5=acc_top5, args=args),
               epoch=num_epoch,
-              filename=ps.path.join(os.path.dirname(args.test), 'test_log.md'))
+              filename=os.path.join(os.path.dirname(args.test), 'test_log.md'))
     import ipdb; ipdb.set_trace()
     return losses.avg, [acc_top1.avg, acc_top5.avg]
 

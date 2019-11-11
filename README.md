@@ -59,11 +59,11 @@ Download link: [3D-ResNet18-Kinetics400-128x128](https://drive.google.com/file/d
 
 If you find the repo useful for your research, please consider citing our paper: 
 ```
-@article{han2019dpc,
-  title={Video Representation Learning by Dense Predictive Coding},
-  author={Han, Tengda and Xie, Weidi and Zisserman, Andrew},
-  journal={arXiv preprint arXiv:1909.04656},
-  year={2019}
+@InProceedings{Han19dpc,
+  author       = "Tengda Han and Weidi Xie and Andrew Zisserman",
+  title        = "Video Representation Learning by Dense Predictive Coding",
+  booktitle    = "Workshop on Large Scale Holistic Video Understanding, ICCV",
+  year         = "2019",
 }
 ```
 For any questions, welcome to create an issue or contact Tengda Han ([htd@robots.ox.ac.uk](mailto:htd@robots.ox.ac.uk)).

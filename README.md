@@ -6,6 +6,22 @@ Links: [[Arxiv](https://arxiv.org/abs/1909.04656)] [[Video](https://youtu.be/43K
 
 ![arch](asset/arch.png)
 
+### DPC Results
+
+Original result from [our paper](https://arxiv.org/abs/1909.04656):
+
+| Pretrain Dataset| Resolution | Backbone | Finetune Acc@1 (UCF101) | Finetune Acc@1 (HMDB51) |
+|----|----|----|----|----|
+|UCF101|128x128|2d3d-R18|60.6|-|
+|Kinetics400|128x128|2d3d-R18|68.2|34.5|
+|Kinetics400|224x224|2d3d-R34|75.7|35.7|
+
+Also re-implemented by other researchers:
+| Pretrain Dataset| Resolution | Backbone | Finetune Acc@1 (UCF101) | Finetune Acc@1 (HMDB51) |
+|----|----|----|----|----|
+|UCF101|128x128|2d3d-R18|61.35 [@kayush95](https://github.com/kayush95) |45.31 [@kayush95](https://github.com/kayush95) |
+
+
 ### Installation
 
 The implementation should work with python >= 3.6, pytorch >= 0.4, torchvision >= 0.2.2. 

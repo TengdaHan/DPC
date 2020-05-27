@@ -208,7 +208,8 @@ def train(data_loader, model, optimizer, epoch):
         
         if idx == 0: target_, (_, B2, NS, NP, SQ) = process_output(mask_)
 
-        # score is a 6d tensor: [B, P, SQ, B, N, SQ]
+        # score is a 6d tensor: [B, P, SQ, B2, N, SQ]
+        # similarity matrix is computed inside each gpu, thus here B == num_gpu * B2
         score_flattened = score_.view(B*NP*SQ, B2*NS*SQ)
         target_flattened = target_.view(B*NP*SQ, B2*NS*SQ)
         target_flattened = target_flattened.argmax(dim=1)

@@ -22,7 +22,7 @@ Also re-implemented by other researchers:
 |UCF101|128x128|2d3d-R18|61.35 [@kayush95](https://github.com/kayush95) |45.31 [@kayush95](https://github.com/kayush95) |
 
 ### News
-* 2020/06/05: Update the link for [3D-ResNet34-Kinetics400-224x224-runningStats](https://drive.google.com/file/d/1-WpsKzPNmSWuzoF2_qVfvfLOE1fwWD4x/view?usp=sharing), the [old one](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing) didn't save BN running statistics, thus couldn't be used to evaluate linear probe. Now it saves. 
+* 2020/06/05: Update the link for [3D-ResNet34-Kinetics400-224x224-runningStats](https://drive.google.com/file/d/1-WpsKzPNmSWuzoF2_qVfvfLOE1fwWD4x/view?usp=sharing), the [old one](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing) didn't save BN running statistics, thus couldn't be used to evaluate linear probe. Now it saves (without changing any weights).
 
 ### Installation
 

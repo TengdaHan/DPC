@@ -22,6 +22,7 @@ Also re-implemented by other researchers:
 |UCF101|128x128|2d3d-R18|61.35 [@kayush95](https://github.com/kayush95) |45.31 [@kayush95](https://github.com/kayush95) |
 
 ### News
+* 2020/10/09: Upload [3D-ResNet18-UCF101-128x128](http://www.robots.ox.ac.uk/~htd/dpc/ucf101-rgb-128_resnet18_dpc.pth.tar) pretrained weights.
 * 2020/06/05: Update the link for [3D-ResNet34-Kinetics400-224x224-runningStats](https://drive.google.com/file/d/1-WpsKzPNmSWuzoF2_qVfvfLOE1fwWD4x/view?usp=sharing), the [old one](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing) didn't save BN running statistics, thus couldn't be used to evaluate linear probe. Now it saves (without changing any weights).
 
 ### Installation
@@ -67,9 +68,12 @@ Change directory `cd DPC/eval/`
 It took us **more than 1 week** to train the 3D-ResNet18 DPC model on Kinetics-400 with 128x128 resolution, and it tooks about **6 weeks** to train the 3D-ResNet34 DPC model on Kinetics-400 with 224x224 resolution (with 4 Nvidia P40 GPUs). 
 
 Download link: 
-- [3D-ResNet18-Kinetics400-128x128](https://drive.google.com/file/d/1jbMg2EAX8armIQA6_0YwfATh_h7rQz4u/view?usp=sharing), 
-- [3D-ResNet34-Kinetics400-224x224](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing), 
-- [3D-ResNet34-Kinetics400-224x224-runningStats](https://drive.google.com/file/d/1-WpsKzPNmSWuzoF2_qVfvfLOE1fwWD4x/view?usp=sharing)
+* Kinetics400 pretrain:
+  - [3D-ResNet18-Kinetics400-128x128](https://drive.google.com/file/d/1jbMg2EAX8armIQA6_0YwfATh_h7rQz4u/view?usp=sharing), 
+  - [3D-ResNet34-Kinetics400-224x224](https://drive.google.com/file/d/1d2XhuUwGTgEBg2cKkQbfJG8omHaSlELZ/view?usp=sharing), 
+  - [3D-ResNet34-Kinetics400-224x224-runningStats](https://drive.google.com/file/d/1-WpsKzPNmSWuzoF2_qVfvfLOE1fwWD4x/view?usp=sharing)
+* UCF101 pretrain:
+  - [3D-ResNet18-UCF101-128x128](http://www.robots.ox.ac.uk/~htd/dpc/ucf101-rgb-128_resnet18_dpc.pth.tar)
 
 * example: finetune `3D-ResNet34-Kinetics400-224x224`
   ```

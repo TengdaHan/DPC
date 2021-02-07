@@ -183,15 +183,15 @@ class Bottleneck2d(nn.Module):
         residual = x
 
         out = self.conv1(x)
-        if self.batchnorm: out = self.bn1(out)
+        out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        if self.batchnorm: out = self.bn2(out)
+        out = self.bn2(out)
         out = self.relu(out)
 
         out = self.conv3(out)
-        if self.batchnorm: out = self.bn3(out)
+        out = self.bn3(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)

@@ -211,8 +211,8 @@ def train(data_loader, model, optimizer, epoch):
         # score is a 6d tensor: [B, P, SQ, B2, N, SQ]
         # similarity matrix is computed inside each gpu, thus here B == num_gpu * B2
         score_flattened = score_.view(B*NP*SQ, B2*NS*SQ)
-        target_flattened = target_.view(B*NP*SQ, B2*NS*SQ)
-        target_flattened = target_flattened.argmax(dim=1)
+        target_flattened = target_.view(B*NP*SQ, B2*NS*SQ).to(cuda)
+        target_flattened = target_flattened.to(int).argmax(dim=1)
 
         loss = criterion(score_flattened, target_flattened)
         top1, top3, top5 = calc_topk_accuracy(score_flattened, target_flattened, (1,3,5))
@@ -263,8 +263,8 @@ def validate(data_loader, model, epoch):
 
             # [B, P, SQ, B, N, SQ]
             score_flattened = score_.view(B*NP*SQ, B2*NS*SQ)
-            target_flattened = target_.view(B*NP*SQ, B2*NS*SQ)
-            target_flattened = target_flattened.argmax(dim=1)
+            target_flattened = target_.view(B*NP*SQ, B2*NS*SQ).to(cuda)
+            target_flattened = target_flattened.to(int).argmax(dim=1)
 
             loss = criterion(score_flattened, target_flattened)
             top1, top3, top5 = calc_topk_accuracy(score_flattened, target_flattened, (1,3,5))
